@@ -1,0 +1,177 @@
+const { Sequelize, QueryTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const crypto = require('crypto');
+
+const AdminController = {
+    login: async (req, res) => {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.json({ success: false, message: 'Username and password required' });
+        }
+
+        try {
+            // MD5 hash for password (legacy support)
+            const md5Password = crypto.createHash('md5').update(password).digest('hex');
+
+            const query = `SELECT * FROM users WHERE user_name = :username AND password = :password`;
+            const [admin] = await sequelize.query(query, {
+                replacements: { username, password: md5Password },
+                type: QueryTypes.SELECT
+            });
+
+            if (admin) {
+                // In a real app, generate JWT here. For now, return success.
+                res.json({
+                    success: true,
+                    admin_id: admin.user_id,
+                    username: admin.user_name,
+                    app_id: admin.app_id,
+                    user_type: admin.user_type
+                });
+            } else {
+                res.json({ success: false, message: 'Invalid credentials' });
+            }
+        } catch (error) {
+            console.error("Admin Login Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },
+
+    getDashboardStats: async (req, res) => {
+        // Mock dashboard stats based on data
+        try {
+            // Simple counts
+            const [usersCount] = await sequelize.query("SELECT COUNT(*) as count FROM customers", { type: QueryTypes.SELECT });
+            const [functionsCount] = await sequelize.query("SELECT COUNT(*) as count FROM functions WHERE status='1'", { type: QueryTypes.SELECT });
+
+            res.json({
+                success: true,
+                stats: {
+                    total_users: usersCount.count,
+                    active_modules: functionsCount.count,
+                    total_events: functionsCount.count // Mapping functions to events for now
+                }
+            });
+        } catch (error) {
+            console.error("Dashboard Stats Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },
+
+    getModules: async (req, res) => {
+        try {
+            const { admin_id, is_super } = req.query;
+
+            let query;
+            let replacements = {};
+
+            if (is_super === '1') {
+                query = `
+                    SELECT function_id, function_name, description, status, category, function_org_name 
+                    FROM functions 
+                    ORDER BY function_order ASC
+                `;
+            } else {
+                // For App Admin, join with functions_user to get allotted modules
+                // And use the display name (fu.name) if available, else fallback to function_name
+                query = `
+                    SELECT 
+                        f.function_id, 
+                        COALESCE(fu.name, f.function_name) as function_name, 
+                        f.description, 
+                        fu.status as status, 
+                        f.category, 
+                        f.function_org_name 
+                    FROM functions f
+                    JOIN functions_user fu ON f.function_id = fu.function_id
+                    WHERE fu.user_id = :admin_id AND f.status = '1'
+                    ORDER BY f.function_order ASC
+                `;
+                replacements = { admin_id };
+            }
+
+            const modules = await sequelize.query(query, {
+                replacements,
+                type: QueryTypes.SELECT
+            });
+
+            res.json({
+                success: true,
+                modules
+            });
+        } catch (error) {
+            console.error("Get Modules Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },
+
+    getUsers: async (req, res) => {
+        try {
+            const users = await sequelize.query(
+                "SELECT user_id, user_name, name, email FROM users WHERE user_type > 1", // Assuming 1=SuperAdmin
+                { type: QueryTypes.SELECT }
+            );
+            res.json({ success: true, users });
+        } catch (error) {
+            console.error("Get Users Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },
+
+    updateModuleStatus: async (req, res) => {
+        try {
+            const { admin_id, function_id, status } = req.body;
+
+            // This only supports App Admin toggling their allotted modules for now
+            // For Super Admin to toggle global modules, we'd need a separate check or flag
+
+            // Update functions_user status
+            await sequelize.query(
+                `UPDATE functions_user SET status = :status WHERE user_id = :admin_id AND function_id = :function_id`,
+                {
+                    replacements: { status, admin_id, function_id },
+                    type: QueryTypes.UPDATE
+                }
+            );
+
+            res.json({ success: true, message: 'Status updated successfully' });
+        } catch (error) {
+            console.error("Update Module Status Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },
+
+    createUser: async (req, res) => {
+        try {
+            const { user_name, password, email, name, app_id, user_type } = req.body;
+
+            // Validate inputs?
+
+            const md5Password = crypto.createHash('md5').update(password).digest('hex');
+
+            await sequelize.query(
+                `INSERT INTO users (user_name, password, email, name, app_id, user_type, status, created_date) 
+                 VALUES (:user_name, :password, :email, :name, :app_id, :user_type, '1', NOW())`,
+                {
+                    replacements: {
+                        user_name,
+                        password: md5Password,
+                        email: email || '',
+                        name: name || '',
+                        app_id: app_id || '',
+                        user_type: user_type || 2
+                    },
+                    type: QueryTypes.INSERT
+                }
+            );
+
+            res.json({ success: true, message: 'User created successfully' });
+        } catch (error) {
+            console.error("Create User Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    }
+};
+
+module.exports = AdminController;

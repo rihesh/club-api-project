@@ -1,0 +1,7 @@
+node_modules/
+.env
+eventapp.sqlite
+server.log
+uploads/
+src/config/database.sqlite
+.DS_Store

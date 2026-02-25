@@ -1,4 +1,5 @@
 const { Sequelize } = require('sequelize');
+const mysql2 = require('mysql2'); // Explicitly require to force Vercel to include it in the build
 require('dotenv').config();
 
 // If on Vercel, it uses Railway DB credentials. Otherwise, it defaults to local DB credentials.

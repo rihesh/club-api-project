@@ -18,6 +18,7 @@ const sequelize = new Sequelize(
     host: dbHost,
     port: dbPort,
     dialect: 'mysql',
+    dialectModule: require('mysql2'),
     logging: false,
   }
 );

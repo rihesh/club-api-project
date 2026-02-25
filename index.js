@@ -36,4 +36,8 @@ app.get('/', (req, res) => {
     res.send('EventApp Backend Running');
 });
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+if (process.env.NODE_ENV !== 'vercel') {
+    app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+}
+
+module.exports = app;

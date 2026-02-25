@@ -3,7 +3,7 @@ const mysql2 = require('mysql2'); // Explicitly require to force Vercel to inclu
 require('dotenv').config();
 
 // If on Vercel, it uses Railway DB credentials. Otherwise, it defaults to local DB credentials.
-const useCloudDb = process.env.NODE_ENV === 'vercel';
+const useCloudDb = process.env.NODE_ENV === 'vercel' || process.env.VERCEL === '1';
 
 const dbName = useCloudDb ? process.env.RAILWAY_DB_NAME : (process.env.DB_NAME || 'products_event2');
 const dbUser = useCloudDb ? process.env.RAILWAY_DB_USER : (process.env.DB_USER || 'root');

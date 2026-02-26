@@ -49,7 +49,7 @@ class StripeController {
     // 2. Fetch connection status
     static async getAccountStatus(req, res) {
         try {
-            const userId = req.user?.id || req.params.userId;
+            const userId = req.user?.id || req.params.userId || req.query.user_id;
 
             const appSettings = await AppSettings.findOne({ where: { user_id: userId } });
             if (!appSettings || !appSettings.stripe_account_id) {

@@ -48,7 +48,21 @@ const upload = multer({
 const UploadController = {
     // We use .single('file') to parse the multipart form.
     // If memoryStorage is used, the file is buffered in req.file.buffer
-    uploadMiddleware: upload.single('file'),
+    uploadMiddleware: (req, res, next) => {
+        const singleUpload = upload.single('file');
+        singleUpload(req, res, (err) => {
+            if (err) {
+                console.error("Multer parse error:", err);
+                let errorMessage = "Multer Error processing upload.";
+                if (typeof err === 'string') errorMessage = err;
+                else if (err instanceof Error) errorMessage = err.message;
+                else if (err && typeof err === 'object') errorMessage = JSON.stringify(err);
+
+                return res.status(500).json({ success: false, message: errorMessage, errorType: typeof err });
+            }
+            next();
+        });
+    },
 
     uploadFile: async (req, res) => {
         try {

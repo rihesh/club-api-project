@@ -56,6 +56,10 @@ const AppSettings = sequelize.define('AppSettings', {
         type: DataTypes.STRING(20),
         defaultValue: '#000000'
     },
+    home_layout: {
+        type: DataTypes.STRING(50),
+        defaultValue: 'classic'
+    },
     slider_images: {
         type: DataTypes.JSON, // Stores array of URLs
         allowNull: true

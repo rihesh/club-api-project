@@ -46,8 +46,9 @@ const SettingsController = {
                     location: '',
                     description: 'Welcome to the event app.',
                     statusbar_color: '#000000',
+                    home_layout: 'classic',
                     slider_images: [],
-                    social_links: { facebook: '', twitter: '' }
+                    social_links: { facebook: '', twitter: '', instagram: '', website: '' }
                 };
             }
 
@@ -74,6 +75,7 @@ const SettingsController = {
                 location,
                 description,
                 statusbar_color,
+                home_layout,
                 slider_images,
                 social_links
             } = req.body;
@@ -94,8 +96,9 @@ const SettingsController = {
                 location,
                 description,
                 statusbar_color,
-                slider_images,
-                social_links
+                home_layout,
+                slider_images: typeof slider_images === 'string' ? slider_images : JSON.stringify(slider_images || []),
+                social_links: typeof social_links === 'string' ? social_links : JSON.stringify(social_links || {})
             };
 
             if (settings) {

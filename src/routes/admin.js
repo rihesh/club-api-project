@@ -11,6 +11,8 @@ router.get('/modules', AdminController.getModules);
 router.put('/modules/status', AdminController.updateModuleStatus);
 router.get('/users', AdminController.getUsers); // Ensure we have this for dropdown
 router.post('/users', AdminController.createUser);
+router.delete('/users/:id', AdminController.deleteUser);
+router.post('/users/:id/reset-password', AdminController.resetUserPassword);
 
 // Super Admin Routes
 router.post('/modules/add', SuperAdminController.createModule);

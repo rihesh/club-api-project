@@ -48,6 +48,10 @@ const AppSettings = sequelize.define('AppSettings', {
         type: DataTypes.TEXT,
         allowNull: true
     },
+    location: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
     statusbar_color: {
         type: DataTypes.STRING(20),
         defaultValue: '#000000'

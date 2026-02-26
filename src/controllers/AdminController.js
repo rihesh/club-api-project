@@ -171,6 +171,58 @@ const AdminController = {
             console.error("Create User Error:", error);
             res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
+    },
+
+    deleteUser: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            // Optionally, prevent deleting the superadmin (user_id = 1)
+            if (id === '1') {
+                return res.status(403).json({ success: false, message: 'Cannot delete Super Admin' });
+            }
+
+            // We do a hard delete for now, or update status to '0'? 
+            // Often in this schema, status='0' is soft delete, but we'll run a DELETE matching typical CRUD
+            await sequelize.query(
+                `DELETE FROM users WHERE user_id = :id AND user_type > 1`,
+                {
+                    replacements: { id },
+                    type: QueryTypes.DELETE
+                }
+            );
+
+            res.json({ success: true, message: 'User deleted successfully' });
+        } catch (error) {
+            console.error("Delete User Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },
+
+    resetUserPassword: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { new_password } = req.body;
+
+            if (!new_password) {
+                return res.status(400).json({ success: false, message: 'New password is required' });
+            }
+
+            const md5Password = crypto.createHash('md5').update(new_password).digest('hex');
+
+            await sequelize.query(
+                `UPDATE users SET password = :password WHERE user_id = :id`,
+                {
+                    replacements: { password: md5Password, id },
+                    type: QueryTypes.UPDATE
+                }
+            );
+
+            res.json({ success: true, message: 'Password reset successfully' });
+        } catch (error) {
+            console.error("Reset Password Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
     }
 };
 

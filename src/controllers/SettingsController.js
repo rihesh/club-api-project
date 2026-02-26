@@ -43,6 +43,7 @@ const SettingsController = {
                     logo_url: '',
                     event_name: 'My Event',
                     subtitle: 'Annual Conference',
+                    location: '',
                     description: 'Welcome to the event app.',
                     statusbar_color: '#000000',
                     slider_images: [],
@@ -70,6 +71,7 @@ const SettingsController = {
                 // New Fields
                 event_name,
                 subtitle,
+                location,
                 description,
                 statusbar_color,
                 slider_images,
@@ -89,6 +91,7 @@ const SettingsController = {
                 logo_url,
                 event_name,
                 subtitle,
+                location,
                 description,
                 statusbar_color,
                 slider_images,

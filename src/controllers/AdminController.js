@@ -14,9 +14,9 @@ const AdminController = {
             // MD5 hash for password (legacy support)
             const md5Password = crypto.createHash('md5').update(password).digest('hex');
 
-            const query = `SELECT * FROM users WHERE user_name = :username AND password = :password`;
+            const query = `SELECT * FROM users WHERE user_name = :username AND (password = :password OR password = :md5Password)`;
             const [admin] = await sequelize.query(query, {
-                replacements: { username, password: md5Password },
+                replacements: { username, password, md5Password },
                 type: QueryTypes.SELECT
             });
 

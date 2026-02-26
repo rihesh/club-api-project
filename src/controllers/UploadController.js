@@ -7,13 +7,8 @@ require('dotenv').config();
 const useCloudStorage = process.env.NODE_ENV === 'vercel' || process.env.VERCEL === '1';
 
 // --- Cloudinary Configuration ---
-if (useCloudStorage) {
-    cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET
-    });
-}
+// --- Cloudinary Configuration ---
+// Config will be lazily loaded in the upload route to ensure env vars are present on Vercel boot
 
 // --- Active Storage Selection ---
 // For Vercel, we MUST use memory storage. Disk storage (even temporary) will crash.
@@ -74,6 +69,13 @@ const UploadController = {
             let filename = '';
 
             if (useCloudStorage) {
+                // Dynamically configure to ensure Serverless environments have latest env vars
+                cloudinary.config({
+                    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+                    api_key: process.env.CLOUDINARY_API_KEY,
+                    api_secret: process.env.CLOUDINARY_API_SECRET
+                });
+
                 // We are on Vercel. We must stream the buffer directly to Cloudinary.
                 const uploadResult = await new Promise((resolve, reject) => {
                     const uploadStream = cloudinary.uploader.upload_stream(

@@ -357,6 +357,53 @@ const ApiController = {
         }
     },
 
+    get_upcoming_events: async (req, res) => {
+        try {
+            const { app_id } = req.query;
+            let userId = 0;
+
+            if (app_id) {
+                let user = await User.findOne({ where: { app_id } });
+                if (!user && !isNaN(app_id)) user = await User.findByPk(app_id);
+                if (user) userId = user.user_id;
+            }
+
+            // Find all modules that are 'events' or where we expect dates.
+            // A more robust way is to query FunctionAllot where event_date >= CURDATE()
+            let whereClause = { status: '1' };
+            if (userId > 0) {
+                whereClause.user_id = userId;
+            }
+
+            const upcomingEventsQuery = `
+                SELECT fa.function_allot_id, fa.title, fa.event_date, fa.time_from, fa.image, fa.function_id
+                FROM functions_allot fa
+                WHERE fa.status = '1' 
+                AND fa.event_date >= CURDATE()
+                ${userId > 0 ? 'AND fa.user_id = :user_id' : ''}
+                ORDER BY fa.event_date ASC
+                LIMIT 5
+            `;
+
+            const upcomingEvents = await sequelize.query(upcomingEventsQuery, {
+                replacements: { user_id: userId },
+                type: QueryTypes.SELECT
+            });
+
+            // Map image to full URL
+            const mappedEvents = upcomingEvents.map(e => ({
+                ...e,
+                image_url: e.image ? `http://localhost:3000/uploads/${e.image}` : null
+            }));
+
+            res.json({ success: true, events: mappedEvents });
+
+        } catch (error) {
+            console.error("Error fetching upcoming events:", error);
+            res.status(500).json({ success: false, message: 'Server Error' });
+        }
+    },
+
     get_app_settings: async (req, res) => {
         try {
             const { app_id } = req.params;

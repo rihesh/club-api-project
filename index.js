@@ -45,21 +45,6 @@ app.get('/', (req, res) => {
     res.send('EventApp Backend Running');
 });
 
-app.get('/api/debug-env', (req, res) => {
-    const secret = process.env.CLOUDINARY_API_SECRET;
-    res.json({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key_len: process.env.CLOUDINARY_API_KEY ? process.env.CLOUDINARY_API_KEY.length : 0,
-        api_secret_len: secret ? secret.length : 0,
-        secret_starts_with: secret ? secret.substring(0, 2) : null,
-        secret_ends_with: secret ? secret.substring(secret.length - 2) : null,
-        has_quotes: secret ? (secret.startsWith('"') || secret.startsWith("'")) : false,
-        has_spaces: secret ? (secret.trim().length !== secret.length) : false,
-        is_vercel: process.env.VERCEL === '1',
-        node_env: process.env.NODE_ENV
-    });
-});
-
 if (process.env.NODE_ENV !== 'vercel') {
     app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 }

@@ -12,8 +12,17 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Apply body-parser only to non-upload routes, as Multer needs the raw stream
+app.use((req, res, next) => {
+    if (req.originalUrl.startsWith('/api/upload')) {
+        next();
+    } else {
+        bodyParser.json()(req, res, (err) => {
+            if (err) return next(err);
+            bodyParser.urlencoded({ extended: true })(req, res, next);
+        });
+    }
+});
 
 // Test Database Connection
 sequelize.authenticate()

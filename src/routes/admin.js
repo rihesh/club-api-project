@@ -14,7 +14,6 @@ router.post('/users', AdminController.createUser);
 router.delete('/users/:id', AdminController.deleteUser);
 router.post('/users/:id/reset-password', AdminController.resetUserPassword);
 router.put('/users/:id/commission', AdminController.updateUserCommission);
-router.get('/migrate-db-force', AdminController.migrateDB);
 
 // Super Admin Routes
 router.post('/modules/add', SuperAdminController.createModule);

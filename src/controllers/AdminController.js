@@ -252,20 +252,6 @@ const AdminController = {
             console.error("Update Commission Error:", error);
             res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
-    },
-
-    migrateDB: async (req, res) => {
-        try {
-            await sequelize.query('ALTER TABLE users ADD COLUMN commission_rate DECIMAL(5,2) DEFAULT 10.00');
-            res.json({ success: true, message: 'Migration successful' });
-        } catch (error) {
-            console.error('Migration error:', error);
-            if (error.message && error.message.includes('Duplicate column')) {
-                res.json({ success: true, message: 'Column already exists.' });
-            } else {
-                res.status(500).json({ success: false, error: error.message });
-            }
-        }
     }
 };
 

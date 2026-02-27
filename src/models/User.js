@@ -59,6 +59,10 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING(200),
         allowNull: false
     },
+    commission_rate: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 10.00
+    },
     device_token: {
         type: DataTypes.STRING(200),
         allowNull: false

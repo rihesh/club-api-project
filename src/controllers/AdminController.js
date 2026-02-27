@@ -109,7 +109,7 @@ const AdminController = {
     getUsers: async (req, res) => {
         try {
             const users = await sequelize.query(
-                "SELECT user_id, user_name, name, email FROM users WHERE user_type > 1", // Assuming 1=SuperAdmin
+                "SELECT user_id, user_name, name, email, commission_rate FROM users WHERE user_type > 1", // Assuming 1=SuperAdmin
                 { type: QueryTypes.SELECT }
             );
             res.json({ success: true, users });
@@ -221,6 +221,35 @@ const AdminController = {
             res.json({ success: true, message: 'Password reset successfully' });
         } catch (error) {
             console.error("Reset Password Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },
+
+    updateUserCommission: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { commission_rate } = req.body;
+
+            if (commission_rate === undefined || commission_rate === null) {
+                return res.status(400).json({ success: false, message: 'Commission rate is required' });
+            }
+
+            const parsedRate = parseFloat(commission_rate);
+            if (isNaN(parsedRate) || parsedRate < 0 || parsedRate > 100) {
+                return res.status(400).json({ success: false, message: 'Commission rate must be a valid percentage between 0 and 100.' });
+            }
+
+            await sequelize.query(
+                `UPDATE users SET commission_rate = :commission_rate WHERE user_id = :id AND user_type > 1`,
+                {
+                    replacements: { commission_rate: parsedRate.toFixed(2), id },
+                    type: QueryTypes.UPDATE
+                }
+            );
+
+            res.json({ success: true, message: 'Commission rate updated successfully' });
+        } catch (error) {
+            console.error("Update Commission Error:", error);
             res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
     }

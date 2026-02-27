@@ -87,6 +87,14 @@ class StripeController {
             // Get the App Admin who owns this event
             const appAdminUserId = event.user_id;
 
+            // Query their custom commission rate from users table
+            const userRecord = await User.findByPk(appAdminUserId);
+            // Default to 10.00% if custom value missing or query fails
+            let currentCommissionRate = 10.00;
+            if (userRecord && userRecord.commission_rate !== undefined && userRecord.commission_rate !== null) {
+                currentCommissionRate = parseFloat(userRecord.commission_rate);
+            }
+
             // Get App Admin's stripe_account_id
             const appSettings = await AppSettings.findOne({ where: { user_id: appAdminUserId } });
 
@@ -117,8 +125,9 @@ class StripeController {
             // Stripe expects amount in cents or minimum units
             const stripeAmount = Math.round(amount * 100);
 
-            // 10% commission for the Super Admin
-            const applicationFeeAmount = Math.round(stripeAmount * 0.10);
+            // Calculate Custom Platform Commission dynamically
+            const floatMultiplier = currentCommissionRate / 100;
+            const applicationFeeAmount = Math.round(stripeAmount * floatMultiplier);
 
             // Default Payment Params for Direct Charge (if app admin not onboarded)
             const paymentParams = {

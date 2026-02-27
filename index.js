@@ -12,9 +12,9 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-// Apply body-parser only to non-upload routes, as Multer needs the raw stream
+// Apply body-parser only to non-upload and non-webhook routes
 app.use((req, res, next) => {
-    if (req.originalUrl.startsWith('/api/upload')) {
+    if (req.originalUrl.startsWith('/api/upload') || req.originalUrl.startsWith('/api/stripe/webhook')) {
         next();
     } else {
         bodyParser.json()(req, res, (err) => {

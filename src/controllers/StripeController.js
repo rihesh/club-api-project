@@ -149,6 +149,39 @@ class StripeController {
             res.status(500).json({ error: error.message });
         }
     }
+
+    // 4. Webhook to handle successful payments and transfers
+    static async webhook(req, res) {
+        const sig = req.headers['stripe-signature'];
+        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+        let event;
+
+        try {
+            // Validate the cryptographic signature to ensure the payload is from Stripe
+            event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+        } catch (err) {
+            console.error(`⚠️  Webhook signature verification failed: ${err.message}`);
+            return res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+
+        // Handle the event
+        switch (event.type) {
+            case 'payment_intent.succeeded':
+                const paymentIntent = event.data.object;
+                console.log(`✅ PaymentIntent for ${paymentIntent.amount} was successful!`);
+                // Here we could update a Ticket/Booking database table to 'paid' status.
+                break;
+            case 'payment_intent.payment_failed':
+                const failedIntent = event.data.object;
+                console.log(`❌ Payment failed for ${failedIntent.amount}. Reason: ${failedIntent.last_payment_error?.message}`);
+                break;
+            default:
+                console.log(`Unhandled event type ${event.type}`);
+        }
+
+        // Return a 200 response to acknowledge receipt of the event
+        res.status(200).send();
+    }
 }
 
 module.exports = StripeController;

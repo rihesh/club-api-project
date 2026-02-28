@@ -1,5 +1,5 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
-const { AppSettings, FunctionAllot, FieldValue, FunctionField } = require('../models');
+const { AppSettings, FunctionAllot, FieldValue, FunctionField, User } = require('../models');
 
 class StripeController {
 
@@ -116,6 +116,8 @@ class StripeController {
             });
 
             let amountStr = valueRecord ? valueRecord.value : "0";
+            // Strip any currency symbols or non-numeric chars (e.g. "3000$" -> "3000")
+            amountStr = amountStr.replace(/[^0-9.]/g, '');
             let amount = parseFloat(amountStr);
 
             if (isNaN(amount) || amount <= 0) {

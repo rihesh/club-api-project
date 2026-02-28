@@ -409,7 +409,7 @@ const ApiController = {
 
         } catch (error) {
             console.error("Error fetching upcoming events:", error);
-            res.status(500).json({ success: false, message: 'Server Error' });
+            res.status(500).json({ success: false, message: 'Server Error', error: error.message, stack: error.stack });
         }
     },
 

@@ -378,10 +378,11 @@ const ApiController = {
             const upcomingEventsQuery = `
                 SELECT fa.function_allot_id, fa.title, fa.event_date, fa.time_from, fa.image, fa.function_id
                 FROM functions_allot fa
+                JOIN functions f ON fa.function_id = f.function_id
                 WHERE fa.status = '1' 
-                AND fa.event_date >= CURDATE()
+                AND f.name LIKE '%Event%'
                 ${userId > 0 ? 'AND fa.user_id = :user_id' : ''}
-                ORDER BY fa.event_date ASC
+                ORDER BY fa.function_allot_id DESC
                 LIMIT 5
             `;
 
@@ -390,11 +391,19 @@ const ApiController = {
                 type: QueryTypes.SELECT
             });
 
-            // Map image to full URL
-            const mappedEvents = upcomingEvents.map(e => ({
-                ...e,
-                image_url: e.image ? `http://localhost:3000/uploads/${e.image}` : null
-            }));
+            // Map image to full URL safely (Cloudinary or local)
+            const mappedEvents = upcomingEvents.map(e => {
+                let imageUrl = e.image;
+                if (imageUrl && !imageUrl.startsWith('http')) {
+                    imageUrl = `https://club-api-project.vercel.app/uploads/${imageUrl}`;
+                }
+                return {
+                    ...e,
+                    image_url: imageUrl,
+                    Date: e.event_date || "Upcoming",
+                    Name: e.title
+                };
+            });
 
             res.json({ success: true, events: mappedEvents });
 

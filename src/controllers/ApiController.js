@@ -380,7 +380,7 @@ const ApiController = {
                 FROM functions_allot fa
                 JOIN functions f ON fa.function_id = f.function_id
                 WHERE fa.status = '1' 
-                AND f.name LIKE '%Event%'
+                AND f.function_name LIKE '%Event%'
                 ${userId > 0 ? 'AND fa.user_id = :user_id' : ''}
                 ORDER BY fa.function_allot_id DESC
                 LIMIT 5

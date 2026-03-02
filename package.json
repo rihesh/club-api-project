@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -21,7 +23,10 @@
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
     "mysql2": "^3.18.2",
+    "nodemailer": "^8.0.1",
     "nodemon": "^3.1.11",
+    "pdfkit": "^0.17.2",
+    "qrcode": "^1.5.4",
     "sequelize": "^6.37.7",
     "stripe": "^20.3.1"
   }

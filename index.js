@@ -38,6 +38,7 @@ app.use('/api', apiRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/cms', cmsRoutes);
 app.use('/api/stripe', require('./src/routes/stripe'));
+app.use('/api/booking', require('./src/routes/booking'));
 app.use('/api/upload', require('./src/routes/upload'));
 app.use('/uploads', express.static('uploads'));
 

@@ -6,7 +6,7 @@ require('dotenv').config();
 // Otherwise, try the standard DB_ variables, and finally default to localhost logic.
 const dbName = process.env.RAILWAY_DB_NAME || process.env.DB_NAME || 'products_event2';
 const dbUser = process.env.RAILWAY_DB_USER || process.env.DB_USER || 'root';
-const dbPass = process.env.RAILWAY_DB_PASS || process.env.DB_PASS || 'Rihesh@123';
+const dbPass = process.env.RAILWAY_DB_PASS || process.env.DB_PASS || process.env.DB_PASSWORD || 'Rihesh@123';
 const dbHost = process.env.RAILWAY_DB_HOST || process.env.DB_HOST || 'localhost';
 const dbPort = process.env.RAILWAY_DB_PORT || process.env.DB_PORT || 3306;
 

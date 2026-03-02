@@ -7,6 +7,8 @@ const FunctionAllot = require('./FunctionAllot');
 const FieldValue = require('./FieldValue');
 const FunctionUser = require('./FunctionUser');
 const AppSettings = require('./AppSettings');
+const Booking = require('./Booking');
+const TicketTier = require('./TicketTier');
 
 // Define Relationships
 
@@ -39,6 +41,18 @@ FunctionUser.belongsTo(User, { foreignKey: 'user_id' });
 FunctionModel.hasMany(FunctionUser, { foreignKey: 'function_id' });
 FunctionUser.belongsTo(FunctionModel, { foreignKey: 'function_id' });
 
+// FunctionAllot -> TicketTiers
+FunctionAllot.hasMany(TicketTier, { foreignKey: 'function_allot_id' });
+TicketTier.belongsTo(FunctionAllot, { foreignKey: 'function_allot_id' });
+
+// FunctionAllot -> Bookings
+FunctionAllot.hasMany(Booking, { foreignKey: 'function_allot_id' });
+Booking.belongsTo(FunctionAllot, { foreignKey: 'function_allot_id' });
+
+// TicketTier -> Bookings
+TicketTier.hasMany(Booking, { foreignKey: 'ticket_tier_id' });
+Booking.belongsTo(TicketTier, { foreignKey: 'ticket_tier_id' });
+
 module.exports = {
     sequelize,
     User,
@@ -47,7 +61,8 @@ module.exports = {
     FieldType,
     FunctionAllot,
     FieldValue,
-    FieldValue,
     FunctionUser,
-    AppSettings
+    AppSettings,
+    Booking,
+    TicketTier
 };

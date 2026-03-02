@@ -39,18 +39,39 @@ const AdminController = {
     },
 
     getDashboardStats: async (req, res) => {
-        // Mock dashboard stats based on data
         try {
-            // Simple counts
             const [usersCount] = await sequelize.query("SELECT COUNT(*) as count FROM customers", { type: QueryTypes.SELECT });
             const [functionsCount] = await sequelize.query("SELECT COUNT(*) as count FROM functions WHERE status='1'", { type: QueryTypes.SELECT });
+            const [eventsCount] = await sequelize.query("SELECT COUNT(*) as count FROM functions_allot WHERE status='1'", { type: QueryTypes.SELECT });
+
+            // Booking stats
+            const [totalBookings] = await sequelize.query("SELECT COUNT(*) as count FROM bookings", { type: QueryTypes.SELECT });
+            const [paidBookings] = await sequelize.query("SELECT COUNT(*) as count FROM bookings WHERE payment_status='paid'", { type: QueryTypes.SELECT });
+            const [pendingBookings] = await sequelize.query("SELECT COUNT(*) as count FROM bookings WHERE payment_status='pending'", { type: QueryTypes.SELECT });
+            const [revenueRow] = await sequelize.query("SELECT COALESCE(SUM(amount_paid),0) as total FROM bookings WHERE payment_status='paid'", { type: QueryTypes.SELECT });
+
+            // Recent 5 bookings
+            const recentBookings = await sequelize.query(
+                `SELECT b.booking_id, b.booking_reference, b.customer_name, b.customer_mobile,
+                        b.tier_name, b.seat_number, b.amount_paid, b.payment_status, b.created_at,
+                        fa.title as event_title
+                 FROM bookings b
+                 LEFT JOIN functions_allot fa ON b.function_allot_id = fa.function_allot_id
+                 ORDER BY b.created_at DESC LIMIT 5`,
+                { type: QueryTypes.SELECT }
+            );
 
             res.json({
                 success: true,
                 stats: {
                     total_users: usersCount.count,
                     active_modules: functionsCount.count,
-                    total_events: functionsCount.count // Mapping functions to events for now
+                    total_events: eventsCount.count,
+                    total_bookings: totalBookings.count,
+                    paid_bookings: paidBookings.count,
+                    pending_bookings: pendingBookings.count,
+                    total_revenue: parseFloat(revenueRow.total).toFixed(2),
+                    recent_bookings: recentBookings
                 }
             });
         } catch (error) {

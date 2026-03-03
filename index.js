@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const sequelize = require('./src/config/database');
+const path = require('path');
+const sequelize = require(path.join(__dirname, 'src/config/database'));
 require('dotenv').config();
 
 const app = express();
@@ -12,6 +13,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 // Apply body-parser only to non-upload and non-webhook routes
 app.use((req, res, next) => {
     if (req.originalUrl.startsWith('/api/upload') || req.originalUrl.startsWith('/api/stripe/webhook')) {
@@ -27,20 +29,19 @@ app.use((req, res, next) => {
 // Test Database Connection
 sequelize.authenticate()
     .then(() => console.log('Database connected...'))
-    .catch(err => console.log('Error: ' + err));
+    .catch(err => console.error('Database Connection Error:', err));
 
-// Routes
-const apiRoutes = require('./src/routes/api');
-const adminRoutes = require('./src/routes/admin');
-const cmsRoutes = require('./src/routes/cms');
+// Routes - Using path.join for absolute resolution in Vercel
+app.use('/api', require(path.join(__dirname, 'src/routes/api')));
+app.use('/api/admin', require(path.join(__dirname, 'src/routes/admin')));
+app.use('/api/cms', require(path.join(__dirname, 'src/routes/cms')));
+app.use('/api/stripe', require(path.join(__dirname, 'src/routes/stripe')));
+app.use('/api/booking', require(path.join(__dirname, 'src/routes/booking')));
+app.use('/api/upload', require(path.join(__dirname, 'src/routes/upload')));
 
-app.use('/api', apiRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/cms', cmsRoutes);
-app.use('/api/stripe', require('./src/routes/stripe'));
-app.use('/api/booking', require('./src/routes/booking'));
-app.use('/api/upload', require('./src/routes/upload'));
-app.use('/uploads', express.static('uploads'));
+try {
+    app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+} catch (e) { }
 
 app.get('/', (req, res) => {
     res.send('EventApp Backend Running');

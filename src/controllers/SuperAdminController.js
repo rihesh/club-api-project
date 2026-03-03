@@ -105,6 +105,28 @@ const SuperAdminController = {
             console.error("Delete Field Error:", error);
             res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
+    },
+
+    // 5. Delete Module
+    deleteModule: async (req, res) => {
+        try {
+            const { module_id } = req.params;
+
+            if (!module_id) {
+                return res.status(400).json({ status: false, message: 'Module ID is required' });
+            }
+
+            const moduleItem = await FunctionModel.findByPk(module_id);
+            if (!moduleItem) {
+                return res.status(404).json({ status: false, message: 'Module not found' });
+            }
+
+            await moduleItem.destroy();
+            return res.status(200).json({ status: true, message: 'Module deleted successfully' });
+        } catch (error) {
+            console.error('Error deleting module:', error);
+            return res.status(500).json({ status: false, message: 'Server error while deleting module' });
+        }
     }
 };
 

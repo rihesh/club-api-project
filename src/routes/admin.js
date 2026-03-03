@@ -17,6 +17,7 @@ router.put('/users/:id/commission', AdminController.updateUserCommission);
 
 // Super Admin Routes
 router.post('/modules/add', SuperAdminController.createModule);
+router.delete('/modules/:module_id', SuperAdminController.deleteModule);
 router.get('/field-types', SuperAdminController.getFieldTypes);
 router.post('/fields/:function_id', SuperAdminController.addField);
 router.delete('/fields/:field_id', SuperAdminController.deleteField);

@@ -1,4 +1,5 @@
 const { PushToken, NotificationMsg } = require('../models');
+const { Op } = require('sequelize');
 const fetch = require('node-fetch');
 
 // Helper: Send push notifications via Expo Push API (no SDK, just fetch — safe for serverless)
@@ -64,7 +65,9 @@ const NotificationController = {
     getHistory: async (req, res) => {
         try {
             const { app_id } = req.query;
-            const whereClause = app_id ? { app_id } : {};
+            const whereClause = app_id
+                ? { [Op.or]: [{ app_id }, { app_id: null }] }
+                : {};
 
             const notifications = await NotificationMsg.findAll({
                 where: whereClause,

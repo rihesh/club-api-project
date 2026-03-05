@@ -10,6 +10,7 @@ const AppSettings = require('./AppSettings');
 const Booking = require('./Booking');
 const TicketTier = require('./TicketTier');
 const PushToken = require('./PushToken');
+const NotificationMsg = require('./NotificationMsg');
 
 // Define Relationships
 
@@ -66,5 +67,6 @@ module.exports = {
     AppSettings,
     Booking,
     TicketTier,
-    PushToken
+    PushToken,
+    NotificationMsg
 };

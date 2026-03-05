@@ -1,4 +1,4 @@
-const { PushToken } = require('../models');
+const { PushToken, NotificationMsg } = require('../models');
 const fetch = require('node-fetch');
 
 // Helper: Send push notifications via Expo Push API (no SDK, just fetch — safe for serverless)
@@ -60,15 +60,21 @@ const NotificationController = {
         }
     },
 
-    // Fetch notification history (placeholder - returns empty for now, admin can extend later)
+    // Fetch notification history
     getHistory: async (req, res) => {
         try {
-            // In future, this can query a Notifications table where admin-sent pushes are logged
-            // For now, return empty array so mobile doesn't crash
+            const { app_id } = req.query;
+            const whereClause = app_id ? { app_id } : {};
+
+            const notifications = await NotificationMsg.findAll({
+                where: whereClause,
+                order: [['created_at', 'DESC']],
+                limit: 50
+            });
+
             res.json({
                 success: true,
-                notifications: [],
-                message: 'No notification history available yet'
+                notifications
             });
         } catch (error) {
             console.error('[NotificationController] Error fetching history:', error);
@@ -94,6 +100,14 @@ const NotificationController = {
             }
 
             await sendExpoPushNotifications(tokens, title, body, data || {});
+
+            // Save to history
+            await NotificationMsg.create({
+                app_id,
+                title,
+                body,
+                data: data || {}
+            });
 
             res.json({ success: true, message: `Notification sent to ${tokens.length} device(s)`, sent: tokens.length });
         } catch (error) {

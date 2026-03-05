@@ -1,4 +1,5 @@
 const { PushToken } = require('../models');
+const fetch = require('node-fetch');
 
 // Helper: Send push notifications via Expo Push API (no SDK, just fetch — safe for serverless)
 const sendExpoPushNotifications = async (tokens, title, body, data = {}) => {
@@ -96,8 +97,8 @@ const NotificationController = {
 
             res.json({ success: true, message: `Notification sent to ${tokens.length} device(s)`, sent: tokens.length });
         } catch (error) {
-            console.error('[NotificationController] Error sending push:', error);
-            res.status(500).json({ success: false, message: 'Server Error' });
+            console.error('[NotificationController] Error sending push (Vercel):', error.message, error.stack);
+            res.status(500).json({ success: false, message: 'Server Error: ' + error.message });
         }
     }
 };

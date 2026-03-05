@@ -32,4 +32,8 @@ const SettingsController = require('../controllers/SettingsController');
 router.get('/settings', SettingsController.getSettings);
 router.post('/settings', SettingsController.saveSettings);
 
+// Admin Notification Proxy
+const NotificationController = require('../controllers/NotificationController');
+router.post('/notifications/send', NotificationController.sendToApp);
+
 module.exports = router;

@@ -38,6 +38,7 @@ app.use('/api/cms', require(path.join(__dirname, 'src/routes/cms')));
 app.use('/api/stripe', require(path.join(__dirname, 'src/routes/stripe')));
 app.use('/api/booking', require(path.join(__dirname, 'src/routes/booking')));
 app.use('/api/upload', require(path.join(__dirname, 'src/routes/upload')));
+app.use('/api/notifications', require(path.join(__dirname, 'src/routes/notifications')));
 
 try {
     app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

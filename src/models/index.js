@@ -9,6 +9,7 @@ const FunctionUser = require('./FunctionUser');
 const AppSettings = require('./AppSettings');
 const Booking = require('./Booking');
 const TicketTier = require('./TicketTier');
+const PushToken = require('./PushToken');
 
 // Define Relationships
 
@@ -64,5 +65,6 @@ module.exports = {
     FunctionUser,
     AppSettings,
     Booking,
-    TicketTier
+    TicketTier,
+    PushToken
 };

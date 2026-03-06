@@ -104,12 +104,12 @@ const AdminController = {
                         fu.status as status, 
                         f.category, 
                         f.function_org_name,
-                        f.is_highlighted,
-                        f.function_order
+                        fu.is_highlighted,
+                        fu.function_order
                     FROM functions f
                     JOIN functions_user fu ON f.function_id = fu.function_id
                     WHERE fu.user_id = :admin_id AND f.status = '1'
-                    ORDER BY f.function_order ASC
+                    ORDER BY fu.function_order ASC
                 `;
                 replacements = { admin_id };
             }
@@ -167,20 +167,21 @@ const AdminController = {
 
     updateModuleHighlight: async (req, res) => {
         try {
-            const { function_id } = req.body;
+            const { admin_id, function_id } = req.body;
+            if (!admin_id) return res.json({ success: false, message: 'Admin ID required' });
 
-            // Un-highlight all
+            // Un-highlight all for this app admin
             await sequelize.query(
-                `UPDATE functions SET is_highlighted = '0'`,
-                { type: QueryTypes.UPDATE }
+                `UPDATE functions_user SET is_highlighted = '0' WHERE user_id = :admin_id`,
+                { replacements: { admin_id }, type: QueryTypes.UPDATE }
             );
 
             // Highlight the selected one
             if (function_id) {
                 await sequelize.query(
-                    `UPDATE functions SET is_highlighted = '1' WHERE function_id = :function_id`,
+                    `UPDATE functions_user SET is_highlighted = '1' WHERE function_id = :function_id AND user_id = :admin_id`,
                     {
-                        replacements: { function_id },
+                        replacements: { function_id, admin_id },
                         type: QueryTypes.UPDATE
                     }
                 );
@@ -195,14 +196,16 @@ const AdminController = {
 
     updateModulePriority: async (req, res) => {
         try {
-            const { priorities } = req.body; // Array of { function_id, function_order }
+            const { admin_id, priorities } = req.body; // Array of { function_id, function_order }
+            if (!admin_id) return res.json({ success: false, message: 'Admin ID required' });
+
             if (priorities && priorities.length > 0) {
                 // In a real app we'd use a transaction or bulk operation. 
                 for (const p of priorities) {
                     await sequelize.query(
-                        `UPDATE functions SET function_order = :function_order WHERE function_id = :function_id`,
+                        `UPDATE functions_user SET function_order = :function_order WHERE function_id = :function_id AND user_id = :admin_id`,
                         {
-                            replacements: { function_order: p.function_order, function_id: p.function_id },
+                            replacements: { function_order: p.function_order, function_id: p.function_id, admin_id },
                             type: QueryTypes.UPDATE
                         }
                     );

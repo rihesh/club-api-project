@@ -113,13 +113,14 @@ const ApiController = {
             // Fetch all allotted functions for this user
             const detailsQuery = `
                 SELECT f.function_id, f.category, f.show_user, f.setting, f.status as f_status, 
-                       fu.name, fu.image, fu.status as fu_status
+                       fu.name, fu.image, fu.status as fu_status, fu.is_highlighted, fu.function_order
                 FROM functions f 
                 JOIN functions_user fu ON (f.function_id = fu.function_id) 
                 WHERE fu.user_id = :user_id 
                 AND fu.status = '1' 
                 AND f.status = '1'
                 AND f.setting IN ('0', '2', '3')
+                ORDER BY fu.function_order ASC
             `;
 
             const functions = await sequelize.query(detailsQuery, {
@@ -148,7 +149,9 @@ const ApiController = {
                         name: details.name, // Use name from allotment (custom name support)
                         category: details.category,
                         image: details.image ? `http://localhost:3000/uploads/${details.image}` : '',
-                        category_id: categoryId
+                        category_id: categoryId,
+                        is_highlighted: details.is_highlighted,
+                        function_order: details.function_order
                     });
                 }
             }

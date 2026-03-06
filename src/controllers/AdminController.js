@@ -89,7 +89,7 @@ const AdminController = {
 
             if (is_super === '1') {
                 query = `
-                    SELECT function_id, function_name, description, status, category, function_org_name 
+                    SELECT function_id, function_name, description, status, category, function_org_name, is_highlighted 
                     FROM functions 
                     ORDER BY function_order ASC
                 `;
@@ -103,7 +103,9 @@ const AdminController = {
                         f.description, 
                         fu.status as status, 
                         f.category, 
-                        f.function_org_name 
+                        f.function_org_name,
+                        f.is_highlighted,
+                        f.function_order
                     FROM functions f
                     JOIN functions_user fu ON f.function_id = fu.function_id
                     WHERE fu.user_id = :admin_id AND f.status = '1'
@@ -159,6 +161,56 @@ const AdminController = {
             res.json({ success: true, message: 'Status updated successfully' });
         } catch (error) {
             console.error("Update Module Status Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },
+
+    updateModuleHighlight: async (req, res) => {
+        try {
+            const { function_id } = req.body;
+
+            // Un-highlight all
+            await sequelize.query(
+                `UPDATE functions SET is_highlighted = '0'`,
+                { type: QueryTypes.UPDATE }
+            );
+
+            // Highlight the selected one
+            if (function_id) {
+                await sequelize.query(
+                    `UPDATE functions SET is_highlighted = '1' WHERE function_id = :function_id`,
+                    {
+                        replacements: { function_id },
+                        type: QueryTypes.UPDATE
+                    }
+                );
+            }
+
+            res.json({ success: true, message: 'Highlighted module updated successfully' });
+        } catch (error) {
+            console.error("Update Module Highlight Error:", error);
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    },
+
+    updateModulePriority: async (req, res) => {
+        try {
+            const { priorities } = req.body; // Array of { function_id, function_order }
+            if (priorities && priorities.length > 0) {
+                // In a real app we'd use a transaction or bulk operation. 
+                for (const p of priorities) {
+                    await sequelize.query(
+                        `UPDATE functions SET function_order = :function_order WHERE function_id = :function_id`,
+                        {
+                            replacements: { function_order: p.function_order, function_id: p.function_id },
+                            type: QueryTypes.UPDATE
+                        }
+                    );
+                }
+            }
+            res.json({ success: true, message: 'Priorities updated successfully' });
+        } catch (error) {
+            console.error("Update Module Priority Error:", error);
             res.status(500).json({ success: false, message: 'Internal Server Error' });
         }
     },

@@ -9,12 +9,21 @@
  */
 
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 // ── Email transporter (lazy init) ──────────────────────────────────────────
 let emailTransporter = null;
+let resendClient = null;
 
-function getEmailTransporter() {
-    if (emailTransporter) return emailTransporter;
+function getEmailClient() {
+    if (resendClient) return { type: 'resend', client: resendClient };
+    if (emailTransporter) return { type: 'smtp', client: emailTransporter };
+
+    if (process.env.RESEND_API_KEY) {
+        resendClient = new Resend(process.env.RESEND_API_KEY);
+        return { type: 'resend', client: resendClient };
+    }
+
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER) return null;
 
     emailTransporter = nodemailer.createTransport({
@@ -27,7 +36,7 @@ function getEmailTransporter() {
         },
         tls: { rejectUnauthorized: false }
     });
-    return emailTransporter;
+    return { type: 'smtp', client: emailTransporter };
 }
 
 // ── Twilio SMS (lazy init) ─────────────────────────────────────────────────
@@ -97,28 +106,62 @@ const NotificationService = {
      * @param {Object} booking  — booking record with customer info
      * @param {string} email    — optional customer email
      * @param {string} mobile   — customer mobile (digits only, with country code)
+     * @param {Buffer} pdfBuffer — optional PDF buffer of the ticket
      */
-    async sendBookingConfirmation(booking, email, mobile) {
+    async sendBookingConfirmation(booking, email, mobile, pdfBuffer = null) {
         const results = [];
 
         // ── EMAIL ──
-        const transporter = getEmailTransporter();
-        if (transporter && email) {
+        const mailClient = getEmailClient();
+        if (mailClient && email) {
             try {
-                await transporter.sendMail({
-                    from: process.env.SMTP_FROM || `"EventApp" <${process.env.SMTP_USER}>`,
-                    to: email,
-                    subject: `🎟 Booking Confirmed — Ref: ${booking.booking_reference}`,
-                    html: buildEmailHTML(booking),
-                });
+                const htmlContent = buildEmailHTML(booking);
+                const attachments = [];
+
+                if (pdfBuffer) {
+                    attachments.push({
+                        filename: `ticket-${booking.booking_reference}.pdf`,
+                        content: pdfBuffer,
+                        contentType: 'application/pdf'
+                    });
+                }
+
+                if (mailClient.type === 'resend') {
+                    const fromEmail = process.env.RESEND_FROM_EMAIL || 'tickets@resend.dev';
+                    const payload = {
+                        from: `EventApp <${fromEmail}>`,
+                        to: [email],
+                        subject: `🎟 Booking Confirmed — Ref: ${booking.booking_reference}`,
+                        html: htmlContent,
+                    };
+                    if (attachments.length > 0) {
+                        payload.attachments = attachments.map(att => ({
+                            filename: att.filename,
+                            content: att.content
+                        }));
+                    }
+                    const resendResult = await mailClient.client.emails.send(payload);
+                    if (resendResult.error) {
+                        throw new Error(resendResult.error.message);
+                    }
+                } else {
+                    await mailClient.client.sendMail({
+                        from: process.env.SMTP_FROM || `"EventApp" <${process.env.SMTP_USER}>`,
+                        to: email,
+                        subject: `🎟 Booking Confirmed — Ref: ${booking.booking_reference}`,
+                        html: htmlContent,
+                        attachments
+                    });
+                }
+
                 results.push({ channel: 'email', status: 'sent', to: email });
                 console.log(`✅ Confirmation email sent to ${email}`);
             } catch (err) {
                 results.push({ channel: 'email', status: 'failed', error: err.message });
                 console.error('❌ Email send failed:', err.message);
             }
-        } else if (!transporter) {
-            results.push({ channel: 'email', status: 'skipped', reason: 'SMTP not configured' });
+        } else if (!mailClient) {
+            results.push({ channel: 'email', status: 'skipped', reason: 'Email client not configured' });
         }
 
         // ── SMS ──

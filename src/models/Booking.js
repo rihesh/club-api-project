@@ -19,6 +19,10 @@ const Booking = sequelize.define('Booking', {
         type: DataTypes.STRING(20),
         allowNull: false
     },
+    customer_email: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
     ticket_tier_id: {
         type: DataTypes.INTEGER,
         allowNull: true  // null = no tier (flat price event)

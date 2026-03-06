@@ -56,6 +56,10 @@ const FunctionModel = sequelize.define('Function', {
     identification: {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+    is_highlighted: {
+        type: DataTypes.ENUM('0', '1'),
+        defaultValue: '0'
     }
 }, {
     tableName: 'functions',

@@ -9,6 +9,8 @@ router.post('/login', AdminController.login);
 router.get('/dashboard', AdminController.getDashboardStats);
 router.get('/modules', AdminController.getModules);
 router.put('/modules/status', AdminController.updateModuleStatus);
+router.put('/modules/highlight', AdminController.updateModuleHighlight);
+router.put('/modules/priority', AdminController.updateModulePriority);
 router.get('/users', AdminController.getUsers); // Ensure we have this for dropdown
 router.post('/users', AdminController.createUser);
 router.delete('/users/:id', AdminController.deleteUser);

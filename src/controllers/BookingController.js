@@ -88,11 +88,11 @@ const BookingController = {
     // ─────────────────────────────────────────────
     // POST /api/booking/create-payment-intent
     // Creates Stripe PaymentIntent and saves pending booking
-    // Body: { event_id, tier_id?, seat_number?, quantity, customer_name, customer_mobile }
+    // Body: { event_id, tier_id?, seat_number?, quantity, customer_name, customer_mobile, customer_email }
     // ─────────────────────────────────────────────
     createPaymentIntent: async (req, res) => {
         try {
-            const { event_id, tier_id, seat_number, quantity = 1, customer_name, customer_mobile } = req.body;
+            const { event_id, tier_id, seat_number, quantity = 1, customer_name, customer_mobile, customer_email } = req.body;
 
             if (!event_id) return res.status(400).json({ success: false, message: 'event_id is required' });
             if (!customer_name) return res.status(400).json({ success: false, message: 'customer_name is required' });
@@ -186,6 +186,7 @@ const BookingController = {
                 function_allot_id: event_id,
                 customer_name,
                 customer_mobile,
+                customer_email: customer_email || null,
                 ticket_tier_id: tier_id || null,
                 tier_name: tierName,
                 seat_number: seat_number || null,
@@ -252,11 +253,20 @@ const BookingController = {
             const event = await FunctionAllot.findByPk(booking.function_allot_id);
             const bookingWithTitle = { ...booking.toJSON(), event_title: event?.title || 'Event' };
 
+            // Generate ticket PDF to attach
+            let pdfBuffer = null;
+            try {
+                pdfBuffer = await TicketPDFService.generateTicketPDF(bookingWithTitle, event?.title || 'Event');
+            } catch (e) {
+                console.error('Could not generate PDF for notification:', e.message);
+            }
+
             // Fire notifications (non-blocking — don't fail the request if notify fails)
             NotificationService.sendBookingConfirmation(
                 bookingWithTitle,
-                null,                      // email: pass customer email here when you capture it
-                booking.customer_mobile    // SMS to mobile number
+                booking.customer_email,    // email: pass customer email here
+                booking.customer_mobile,   // SMS to mobile number
+                pdfBuffer
             ).catch(err => console.error('Notification error:', err));
 
             res.json({

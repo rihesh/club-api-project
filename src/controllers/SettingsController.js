@@ -48,7 +48,7 @@ const SettingsController = {
                     statusbar_color: '#000000',
                     home_layout: 'classic',
                     slider_images: [],
-                    social_links: { facebook: '', twitter: '', instagram: '', website: '' }
+                    social_links: { facebook: '', twitter: '', instagram: '', website: '', youtube: '' }
                 };
             }
 
